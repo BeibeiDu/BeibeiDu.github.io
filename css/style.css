@@ -1,0 +1,90 @@
+/*This is a comment */
+body {
+		background-color: #d6456e;
+		font-family: Helvetica, Arial, sans-serif;
+		background-image: url(../images/bg.jpg);
+		background-size: cover;
+}
+
+
+h1 {
+
+	text-align: center;
+	padding-bottom: 10px;
+	border-bottom: 2px solid black;
+	margin-bottom: 20px;
+	font-size: 40px;
+	padding: 10px;
+	text-shadow: 0px 0px 5px red;
+	font-family: 'Lora', serif;
+}
+
+h2 {
+	text-align: center;
+	text-transform: uppercase;
+	font-weight: normal;
+	letter-spacing: 5px;
+	font-size: 20px;
+	cursor: pointer;
+
+
+}
+
+.face {
+
+	display:block;
+	margin:0 auto;
+	border: 10px solid black;
+	border-radius: 50%;
+
+}
+
+p,
+ul,
+ol {
+
+	line-height: 1.5;
+	list-style: none;
+	padding-left: 10px;
+
+}
+
+h3 {
+
+	text-align: center;
+	text-transform: uppercase;
+	font-weight: bold;
+	font-size: 15px;
+	padding: 10px;
+	margin-top: 0;
+	cursor: pointer;
+}
+
+.main {
+	max-width: 600px;
+	background-color: rgba(255,255,255,0.6);
+	margin: 0 auto;
+	border-radius: 2%;
+}
+
+.fruit {
+	text-align: center;
+
+
+}
+
+.web {
+	text-align: center;
+}
+
+a{
+
+	color: blue;
+	text-decoration: none;
+	font-weight: bold;
+	padding-bottom: 30px;
+}
+
+a:hover {
+	color: #cc0099;
+	text-decoration: underline;
