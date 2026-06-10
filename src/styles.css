@@ -234,6 +234,10 @@ h1 {
   gap: 0.8rem;
 }
 
+.single-score-card {
+  max-width: 34rem;
+}
+
 .score-card {
   display: grid;
   gap: 0.8rem;
@@ -394,6 +398,10 @@ h1 {
 
   .score-cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .single-score-card {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .reset-button {

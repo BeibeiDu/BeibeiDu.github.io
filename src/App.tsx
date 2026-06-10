@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { gad7 } from "./questionnaires/gad7";
+import { gppaq } from "./questionnaires/gppaq";
 import { phq9 } from "./questionnaires/phq9";
 import type { QuestionnaireConfig, ResponseOption } from "./questionnaires/types";
 import { type AnswerMap, scoreQuestionnaire } from "./scoring";
@@ -9,9 +10,17 @@ const optionId = (option: ResponseOption) =>
 
 function App() {
   const [answers, setAnswers] = useState<AnswerMap>({});
+  const isGppaqPage = window.location.pathname.replace(/\/$/, "") === "/gppaq";
 
   const gadScore = useMemo(() => scoreQuestionnaire(gad7, answers), [answers]);
   const phqScore = useMemo(() => scoreQuestionnaire(phq9, answers), [answers]);
+  const gppaqScore = useMemo(() => scoreQuestionnaire(gppaq, answers), [answers]);
+
+  useEffect(() => {
+    document.title = isGppaqPage
+      ? "GPPAQ"
+      : "Mental Health Screening Questionnaires";
+  }, [isGppaqPage]);
 
   const setAnswer = (itemId: string, selectedOptionId: string) => {
     setAnswers((current) => ({ ...current, [itemId]: selectedOptionId }));
@@ -22,19 +31,36 @@ function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  return (
+  return isGppaqPage ? (
     <main className="app-shell">
-      <section className="intro-band">
-        <div className="intro-content">
-          <p className="kicker">Local-only clinic scoring</p>
-          <h1>Mental Health Screening Questionnaires</h1>
-          <p className="privacy-note">
-            Scores are calculated only in this browser session. This app has no
-            backend, database, analytics, cookies, login, or network data
-            submission.
-          </p>
-        </div>
+      <PageIntro
+        title="GPPAQ"
+        description="Scores are calculated only in this browser session. This app has no backend, database, analytics, cookies, login, or network data submission."
+      />
+
+      <section className="control-panel" aria-label="Questionnaire set">
+        <p className="combined-label">General Practice Physical Activity Questionnaire</p>
+        <span>Complete the questionnaire, then transcribe the Physical Activity Index from the report below.</span>
       </section>
+
+      <QuestionnaireForm
+        questionnaire={gppaq}
+        answers={answers}
+        setAnswer={setAnswer}
+      />
+
+      <SingleScoreReport
+        questionnaire={gppaq}
+        score={gppaqScore}
+        onReset={reset}
+      />
+    </main>
+  ) : (
+    <main className="app-shell">
+      <PageIntro
+        title="Mental Health Screening Questionnaires"
+        description="Scores are calculated only in this browser session. This app has no backend, database, analytics, cookies, login, or network data submission."
+      />
 
       <section className="control-panel" aria-label="Questionnaire set">
         <p className="combined-label">GAD-7 and PHQ-9</p>
@@ -60,6 +86,23 @@ function App() {
         onReset={reset}
       />
     </main>
+  );
+}
+
+type PageIntroProps = {
+  title: string;
+  description: string;
+};
+
+function PageIntro({ title, description }: PageIntroProps) {
+  return (
+    <section className="intro-band">
+      <div className="intro-content">
+        <p className="kicker">Local-only clinic scoring</p>
+        <h1>{title}</h1>
+        <p className="privacy-note">{description}</p>
+      </div>
+    </section>
   );
 }
 
@@ -138,6 +181,10 @@ type CombinedScoreReportProps = {
   onReset: () => void;
 };
 
+type SingleScoreReportProps = ScoreCardProps & {
+  onReset: () => void;
+};
+
 function CombinedScoreReport({ scores, onReset }: CombinedScoreReportProps) {
   return (
     <aside className="score-summary combined-report" aria-live="polite">
@@ -164,6 +211,32 @@ function CombinedScoreReport({ scores, onReset }: CombinedScoreReportProps) {
 
       <p className="manual-note">
         Manually transcribe both displayed scores into the approved capture
+        system, then reset before returning the phone.
+      </p>
+    </aside>
+  );
+}
+
+function SingleScoreReport({ questionnaire, score, onReset }: SingleScoreReportProps) {
+  return (
+    <aside className="score-summary combined-report" aria-live="polite">
+      <div className="report-heading">
+        <p className="score-label">Report</p>
+        <h2>Score for transcription</h2>
+      </div>
+
+      <div className="score-cards single-score-card">
+        <ScoreCard questionnaire={questionnaire} score={score} />
+      </div>
+
+      <div className="actions">
+        <button type="button" className="reset-button" onClick={onReset}>
+          Reset questionnaire
+        </button>
+      </div>
+
+      <p className="manual-note">
+        Manually transcribe the displayed score into the approved capture
         system, then reset before returning the phone.
       </p>
     </aside>
