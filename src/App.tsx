@@ -27,7 +27,7 @@ function App() {
       <section className="intro-band">
         <div className="intro-content">
           <p className="kicker">Local-only clinic scoring</p>
-          <h1>Questionnaire scorer</h1>
+          <h1>Mental Health Screening Questionnaires</h1>
           <p className="privacy-note">
             Scores are calculated only in this browser session. This app has no
             backend, database, analytics, cookies, login, or network data
