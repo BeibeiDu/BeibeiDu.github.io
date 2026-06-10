@@ -10,17 +10,22 @@ const optionId = (option: ResponseOption) =>
 
 function App() {
   const [answers, setAnswers] = useState<AnswerMap>({});
-  const isGppaqPage = window.location.pathname.replace(/\/$/, "") === "/gppaq";
+  const currentPath = window.location.pathname.replace(/\/$/, "");
+  const isRootPage = currentPath === "";
+  const isGppaqPage = currentPath === "/gppaq";
 
   const gadScore = useMemo(() => scoreQuestionnaire(gad7, answers), [answers]);
   const phqScore = useMemo(() => scoreQuestionnaire(phq9, answers), [answers]);
   const gppaqScore = useMemo(() => scoreQuestionnaire(gppaq, answers), [answers]);
 
   useEffect(() => {
-    document.title = isGppaqPage
-      ? "GPPAQ"
-      : "Mental Health Screening Questionnaires";
-  }, [isGppaqPage]);
+    if (isRootPage) {
+      document.title = "Questionnaire Selection";
+      return;
+    }
+
+    document.title = isGppaqPage ? "GPPAQ" : "Mental Health Screening Questionnaires";
+  }, [isGppaqPage, isRootPage]);
 
   const setAnswer = (itemId: string, selectedOptionId: string) => {
     setAnswers((current) => ({ ...current, [itemId]: selectedOptionId }));
@@ -30,6 +35,10 @@ function App() {
     setAnswers({});
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  if (isRootPage) {
+    return <SelectionPage />;
+  }
 
   return isGppaqPage ? (
     <main className="app-shell">
@@ -85,6 +94,40 @@ function App() {
         ]}
         onReset={reset}
       />
+    </main>
+  );
+}
+
+function SelectionPage() {
+  const handleSelection = (nextPath: string) => {
+    if (nextPath) {
+      window.location.href = nextPath;
+    }
+  };
+
+  return (
+    <main className="app-shell">
+      <PageIntro
+        title="Questionnaire Selection"
+        description="Choose the questionnaire set to complete. Scores are calculated only in this browser session and are not stored or transmitted."
+      />
+
+      <section className="selector-panel" aria-labelledby="questionnaire-select-label">
+        <label id="questionnaire-select-label" htmlFor="questionnaire-route">
+          Select questionnaire
+        </label>
+        <select
+          id="questionnaire-route"
+          defaultValue=""
+          onChange={(event) => handleSelection(event.target.value)}
+        >
+          <option value="" disabled>
+            Choose an option
+          </option>
+          <option value="/gad7phq9/">GAD-7 and PHQ-9</option>
+          <option value="/gppaq/">GPPAQ</option>
+        </select>
+      </section>
     </main>
   );
 }

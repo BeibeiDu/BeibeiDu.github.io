@@ -18,7 +18,8 @@ body {
   min-height: 100vh;
 }
 
-button {
+button,
+select {
   font: inherit;
 }
 
@@ -86,6 +87,34 @@ h1 {
 .control-panel span {
   color: #53605d;
   line-height: 1.45;
+}
+
+.selector-panel {
+  display: grid;
+  gap: 0.7rem;
+  width: min(100%, 38rem);
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.selector-panel label {
+  color: #16423c;
+  font-weight: 800;
+}
+
+.selector-panel select {
+  width: 100%;
+  min-height: 3.5rem;
+  border: 1px solid #b8c3be;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #18221f;
+  padding: 0 0.9rem;
+}
+
+.selector-panel select:focus-visible {
+  outline: 3px solid #86b7ff;
+  outline-offset: 2px;
 }
 
 .questionnaire {
@@ -365,7 +394,8 @@ h1 {
   }
 
   .control-panel,
-  .questionnaire {
+  .questionnaire,
+  .selector-panel {
     padding-right: 1.5rem;
     padding-left: 1.5rem;
   }
