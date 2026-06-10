@@ -18,8 +18,7 @@ body {
   min-height: 100vh;
 }
 
-button,
-select {
+button {
   font: inherit;
 }
 
@@ -77,19 +76,15 @@ h1 {
   padding: 1rem;
 }
 
-.control-panel label {
-  color: #56635f;
+.combined-label {
+  margin: 0;
+  color: #16423c;
   font-weight: 700;
 }
 
-.control-panel select {
-  width: 100%;
-  min-height: 3rem;
-  border: 1px solid #b8c3be;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #18221f;
-  padding: 0 0.8rem;
+.control-panel span {
+  color: #53605d;
+  line-height: 1.45;
 }
 
 .questionnaire {
@@ -223,6 +218,30 @@ h1 {
   padding: 1rem;
 }
 
+.combined-report {
+  width: min(100%, 58rem);
+  margin: 1rem auto 0;
+}
+
+.report-heading h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.score-cards {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.score-card {
+  display: grid;
+  gap: 0.8rem;
+  border: 1px solid #d7ded8;
+  border-radius: 8px;
+  background: #fbfcfa;
+  padding: 1rem;
+}
+
 .score-label {
   margin-bottom: 0.25rem;
   color: #53605d;
@@ -347,8 +366,6 @@ h1 {
   }
 
   .control-panel {
-    grid-template-columns: 10rem minmax(16rem, 22rem);
-    align-items: center;
     padding-top: 1.5rem;
   }
 
@@ -369,20 +386,13 @@ h1 {
   }
 
   .score-summary {
-    grid-template-columns: 1.25fr 1fr auto;
-    align-items: center;
     width: min(100% - 3rem, 58rem);
-    margin: 1rem auto 0;
     border: 1px solid #c8d3ce;
     border-radius: 8px 8px 0 0;
   }
 
-  .manual-note {
-    grid-column: 1 / -1;
-  }
-
-  .alerts {
-    grid-column: 1 / -1;
+  .score-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .reset-button {

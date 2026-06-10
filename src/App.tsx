@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { questionnaires } from "./questionnaires";
+import { gad7 } from "./questionnaires/gad7";
+import { phq9 } from "./questionnaires/phq9";
 import type { QuestionnaireConfig, ResponseOption } from "./questionnaires/types";
 import { type AnswerMap, scoreQuestionnaire } from "./scoring";
 
@@ -7,22 +8,10 @@ const optionId = (option: ResponseOption) =>
   option.id ?? `${option.label}-${option.value}`;
 
 function App() {
-  const [questionnaireId, setQuestionnaireId] = useState(questionnaires[0].id);
   const [answers, setAnswers] = useState<AnswerMap>({});
 
-  const questionnaire =
-    questionnaires.find((candidate) => candidate.id === questionnaireId) ??
-    questionnaires[0];
-
-  const score = useMemo(
-    () => scoreQuestionnaire(questionnaire, answers),
-    [answers, questionnaire]
-  );
-
-  const handleQuestionnaireChange = (nextId: string) => {
-    setQuestionnaireId(nextId);
-    setAnswers({});
-  };
+  const gadScore = useMemo(() => scoreQuestionnaire(gad7, answers), [answers]);
+  const phqScore = useMemo(() => scoreQuestionnaire(phq9, answers), [answers]);
 
   const setAnswer = (itemId: string, selectedOptionId: string) => {
     setAnswers((current) => ({ ...current, [itemId]: selectedOptionId }));
@@ -47,30 +36,29 @@ function App() {
         </div>
       </section>
 
-      <section className="control-panel" aria-labelledby="questionnaire-picker">
-        <label id="questionnaire-picker" htmlFor="questionnaire">
-          Questionnaire
-        </label>
-        <select
-          id="questionnaire"
-          value={questionnaire.id}
-          onChange={(event) => handleQuestionnaireChange(event.target.value)}
-        >
-          {questionnaires.map((option) => (
-            <option key={option.id} value={option.id}>
-              {option.shortTitle}
-            </option>
-          ))}
-        </select>
+      <section className="control-panel" aria-label="Questionnaire set">
+        <p className="combined-label">GAD-7 and PHQ-9</p>
+        <span>Complete both questionnaires, then transcribe both scores from the report below.</span>
       </section>
 
       <QuestionnaireForm
-        questionnaire={questionnaire}
+        questionnaire={gad7}
+        answers={answers}
+        setAnswer={setAnswer}
+      />
+      <QuestionnaireForm
+        questionnaire={phq9}
         answers={answers}
         setAnswer={setAnswer}
       />
 
-      <ScoreSummary questionnaire={questionnaire} score={score} onReset={reset} />
+      <CombinedScoreReport
+        scores={[
+          { questionnaire: gad7, score: gadScore },
+          { questionnaire: phq9, score: phqScore }
+        ]}
+        onReset={reset}
+      />
     </main>
   );
 }
@@ -109,6 +97,8 @@ function QuestionnaireForm({
                   <button
                     type="button"
                     role="radio"
+                    data-item-id={item.id}
+                    data-option-id={optionId(option)}
                     aria-checked={answers[item.id] === optionId(option)}
                     className={
                       `${answers[item.id] === optionId(option) ? "option selected" : "option"}${
@@ -138,15 +128,51 @@ function QuestionnaireForm({
   );
 }
 
-type ScoreSummaryProps = {
+type ScoreCardProps = {
   questionnaire: QuestionnaireConfig;
   score: ReturnType<typeof scoreQuestionnaire>;
+};
+
+type CombinedScoreReportProps = {
+  scores: ScoreCardProps[];
   onReset: () => void;
 };
 
-function ScoreSummary({ questionnaire, score, onReset }: ScoreSummaryProps) {
+function CombinedScoreReport({ scores, onReset }: CombinedScoreReportProps) {
   return (
-    <aside className="score-summary" aria-live="polite">
+    <aside className="score-summary combined-report" aria-live="polite">
+      <div className="report-heading">
+        <p className="score-label">Combined report</p>
+        <h2>Scores for transcription</h2>
+      </div>
+
+      <div className="score-cards">
+        {scores.map(({ questionnaire, score }) => (
+          <ScoreCard
+            key={questionnaire.id}
+            questionnaire={questionnaire}
+            score={score}
+          />
+        ))}
+      </div>
+
+      <div className="actions">
+        <button type="button" className="reset-button" onClick={onReset}>
+          Reset questionnaires
+        </button>
+      </div>
+
+      <p className="manual-note">
+        Manually transcribe both displayed scores into the approved capture
+        system, then reset before returning the phone.
+      </p>
+    </aside>
+  );
+}
+
+function ScoreCard({ questionnaire, score }: ScoreCardProps) {
+  return (
+    <section className="score-card" aria-label={`${questionnaire.shortTitle} score`}>
       <div>
         <p className="score-label">{questionnaire.totalScoreLabel}</p>
         <div className="score-row">
@@ -196,17 +222,7 @@ function ScoreSummary({ questionnaire, score, onReset }: ScoreSummaryProps) {
         </div>
       ) : null}
 
-      <div className="actions">
-        <button type="button" className="reset-button" onClick={onReset}>
-          Reset questionnaire
-        </button>
-      </div>
-
-      <p className="manual-note">
-        Manually transcribe the displayed score into the approved capture system,
-        then reset before returning the phone.
-      </p>
-    </aside>
+    </section>
   );
 }
 
