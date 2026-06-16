@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { gad7 } from "./questionnaires/gad7";
 import { gppaq } from "./questionnaires/gppaq";
 import { phq9 } from "./questionnaires/phq9";
+import { phqa } from "./questionnaires/phqa";
 import type { QuestionnaireConfig, ResponseOption } from "./questionnaires/types";
 import { type AnswerMap, scoreQuestionnaire } from "./scoring";
 
@@ -13,9 +14,11 @@ function App() {
   const currentPath = window.location.pathname.replace(/\/$/, "");
   const isRootPage = currentPath === "";
   const isGppaqPage = currentPath === "/gppaq";
+  const isAdolescentPage = currentPath === "/gad7phqa";
 
   const gadScore = useMemo(() => scoreQuestionnaire(gad7, answers), [answers]);
   const phqScore = useMemo(() => scoreQuestionnaire(phq9, answers), [answers]);
+  const phqaScore = useMemo(() => scoreQuestionnaire(phqa, answers), [answers]);
   const gppaqScore = useMemo(() => scoreQuestionnaire(gppaq, answers), [answers]);
 
   useEffect(() => {
@@ -24,8 +27,15 @@ function App() {
       return;
     }
 
-    document.title = isGppaqPage ? "GPPAQ" : "Mental Health Screening Questionnaires";
-  }, [isGppaqPage, isRootPage]);
+    if (isGppaqPage) {
+      document.title = "GPPAQ";
+      return;
+    }
+
+    document.title = isAdolescentPage
+      ? "GAD-7 PHQ-A for Adolescents"
+      : "Mental Health Screening Questionnaires";
+  }, [isAdolescentPage, isGppaqPage, isRootPage]);
 
   const setAnswer = (itemId: string, selectedOptionId: string) => {
     setAnswers((current) => ({ ...current, [itemId]: selectedOptionId }));
@@ -67,13 +77,17 @@ function App() {
   ) : (
     <main className="app-shell">
       <PageIntro
-        title="Mental Health Screening Questionnaires"
+        title={isAdolescentPage ? "GAD-7 PHQ-A for Adolescents" : "Mental Health Screening Questionnaires"}
         description="Scores are calculated only in this browser session. This app has no backend, database, analytics, cookies, login, or network data submission."
       />
 
       <section className="control-panel" aria-label="Questionnaire set">
-        <p className="combined-label">GAD-7 and PHQ-9</p>
-        <span>Complete both questionnaires, then transcribe both scores from the report below.</span>
+        <p className="combined-label">
+          {isAdolescentPage ? "GAD-7 and PHQ-A" : "GAD-7 and PHQ-9"}
+        </p>
+        <span>
+          Complete both questionnaires, then transcribe both scores from the report below.
+        </span>
       </section>
 
       <QuestionnaireForm
@@ -82,7 +96,7 @@ function App() {
         setAnswer={setAnswer}
       />
       <QuestionnaireForm
-        questionnaire={phq9}
+        questionnaire={isAdolescentPage ? phqa : phq9}
         answers={answers}
         setAnswer={setAnswer}
       />
@@ -90,7 +104,10 @@ function App() {
       <CombinedScoreReport
         scores={[
           { questionnaire: gad7, score: gadScore },
-          { questionnaire: phq9, score: phqScore }
+          {
+            questionnaire: isAdolescentPage ? phqa : phq9,
+            score: isAdolescentPage ? phqaScore : phqScore
+          }
         ]}
         onReset={reset}
       />
@@ -125,6 +142,7 @@ function SelectionPage() {
             Choose an option
           </option>
           <option value="/gad7phq9/">GAD-7 and PHQ-9</option>
+          <option value="/gad7phqa/">GAD-7 PHQ-A for adolescents</option>
           <option value="/gppaq/">GPPAQ</option>
         </select>
       </section>
