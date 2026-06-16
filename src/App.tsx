@@ -9,12 +9,28 @@ import { type AnswerMap, scoreQuestionnaire } from "./scoring";
 const optionId = (option: ResponseOption) =>
   option.id ?? `${option.label}-${option.value}`;
 
+type DoseEntry = {
+  doseMg: number;
+  weeks: number;
+  text: string;
+  totalMg: number;
+};
+
+type ParsedDoseHistory = {
+  entries: DoseEntry[];
+  ignoredEntries: string[];
+  totalMg: number;
+};
+
+const doseHistoryExample = "2 weeks at 20mg, 2 weeks at 40mg, 4 weeks at 40mg, 8 weeks at 60mg";
+
 function App() {
   const [answers, setAnswers] = useState<AnswerMap>({});
   const currentPath = window.location.pathname.replace(/\/$/, "");
   const isRootPage = currentPath === "";
   const isGppaqPage = currentPath === "/gppaq";
   const isAdolescentPage = currentPath === "/gad7phqa";
+  const isIsotretinoinPage = currentPath === "/isotretinoin";
 
   const gadScore = useMemo(() => scoreQuestionnaire(gad7, answers), [answers]);
   const phqScore = useMemo(() => scoreQuestionnaire(phq9, answers), [answers]);
@@ -32,10 +48,15 @@ function App() {
       return;
     }
 
+    if (isIsotretinoinPage) {
+      document.title = "Isotretinoin Cumulative Dose Calculator";
+      return;
+    }
+
     document.title = isAdolescentPage
       ? "GAD-7 PHQ-A for Adolescents"
       : "Mental Health Screening Questionnaires";
-  }, [isAdolescentPage, isGppaqPage, isRootPage]);
+  }, [isAdolescentPage, isGppaqPage, isIsotretinoinPage, isRootPage]);
 
   const setAnswer = (itemId: string, selectedOptionId: string) => {
     setAnswers((current) => ({ ...current, [itemId]: selectedOptionId }));
@@ -48,6 +69,10 @@ function App() {
 
   if (isRootPage) {
     return <SelectionPage />;
+  }
+
+  if (isIsotretinoinPage) {
+    return <IsotretinoinCalculator />;
   }
 
   return isGppaqPage ? (
@@ -131,7 +156,7 @@ function SelectionPage() {
 
       <section className="selector-panel" aria-labelledby="questionnaire-select-label">
         <label id="questionnaire-select-label" htmlFor="questionnaire-route">
-          Select questionnaire
+          Patient questionnaires
         </label>
         <select
           id="questionnaire-route"
@@ -146,7 +171,232 @@ function SelectionPage() {
           <option value="/gppaq/">GPPAQ</option>
         </select>
       </section>
+
+      <section className="selector-panel" aria-labelledby="clinic-tools-select-label">
+        <label id="clinic-tools-select-label" htmlFor="clinic-tool-route">
+          Clinic Tools
+        </label>
+        <select
+          id="clinic-tool-route"
+          defaultValue=""
+          onChange={(event) => handleSelection(event.target.value)}
+        >
+          <option value="" disabled>
+            Choose an option
+          </option>
+          <option value="/isotretinoin/">Isotretinoin cumulative dose calculator</option>
+        </select>
+      </section>
     </main>
+  );
+}
+
+function IsotretinoinCalculator() {
+  const [doseHistory, setDoseHistory] = useState(doseHistoryExample);
+  const [weightKg, setWeightKg] = useState("");
+  const [targetMgPerKg, setTargetMgPerKg] = useState("120");
+  const [remainingDoseMg, setRemainingDoseMg] = useState("");
+
+  const parsedHistory = useMemo(() => parseDoseHistory(doseHistory), [doseHistory]);
+  const weight = parsePositiveNumber(weightKg);
+  const target = Number(targetMgPerKg);
+  const targetTotalMg = weight ? weight * target : undefined;
+  const remainingMg = targetTotalMg
+    ? Math.max(targetTotalMg - parsedHistory.totalMg, 0)
+    : undefined;
+  const remainingDose = parsePositiveNumber(remainingDoseMg);
+  const remainingWeeks =
+    remainingMg !== undefined && remainingDose
+      ? remainingMg / (remainingDose * 7)
+      : undefined;
+  const completedMgPerKg = weight ? parsedHistory.totalMg / weight : undefined;
+
+  const reset = () => {
+    setDoseHistory("");
+    setWeightKg("");
+    setTargetMgPerKg("120");
+    setRemainingDoseMg("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  return (
+    <main className="app-shell">
+      <PageIntro
+        title="Isotretinoin Cumulative Dose Calculator"
+        description="For clinician arithmetic only. Inputs stay in this browser session and are not stored or transmitted."
+      />
+
+      <section className="control-panel" aria-label="Calculator note">
+        <p className="combined-label">Clinic Tools</p>
+        <span>
+          Enter daily dose periods as free text. The calculator multiplies dose
+          in mg by duration in weeks by 7 days.
+        </span>
+      </section>
+
+      <section className="tool-panel" aria-labelledby="dose-history-title">
+        <div className="section-heading compact-heading">
+          <p>Completed treatment</p>
+          <h2 id="dose-history-title">Dose history</h2>
+          <span>
+            Use entries such as: {doseHistoryExample}
+          </span>
+        </div>
+
+        <label className="field-label" htmlFor="dose-history">
+          Dose and duration entries
+        </label>
+        <textarea
+          id="dose-history"
+          value={doseHistory}
+          onChange={(event) => setDoseHistory(event.target.value)}
+          rows={6}
+          placeholder={doseHistoryExample}
+        />
+
+        {parsedHistory.entries.length > 0 ? (
+          <div className="dose-table" aria-label="Parsed dose history">
+            <div className="dose-table-head">
+              <span>Entry</span>
+              <span>Dose</span>
+              <span>Weeks</span>
+              <span>Total</span>
+            </div>
+            {parsedHistory.entries.map((entry, index) => (
+              <div className="dose-table-row" key={`${entry.text}-${index}`}>
+                <span>{entry.text}</span>
+                <span>{formatNumber(entry.doseMg)} mg/day</span>
+                <span>{formatNumber(entry.weeks)}</span>
+                <span>{formatNumber(entry.totalMg)} mg</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="helper-text">Add at least one dose-duration entry to show a total.</p>
+        )}
+
+        {parsedHistory.ignoredEntries.length > 0 ? (
+          <div className="alert" role="alert">
+            <strong>Some entries were not recognised</strong>
+            <span>{parsedHistory.ignoredEntries.join("; ")}</span>
+          </div>
+        ) : null}
+      </section>
+
+      <section className="tool-panel" aria-labelledby="target-title">
+        <div className="section-heading compact-heading">
+          <p>Target dose</p>
+          <h2 id="target-title">Weight and cumulative target</h2>
+        </div>
+
+        <div className="input-grid">
+          <label className="field-label" htmlFor="weight-kg">
+            Weight in kg
+            <input
+              id="weight-kg"
+              inputMode="decimal"
+              min="0"
+              type="number"
+              value={weightKg}
+              onChange={(event) => setWeightKg(event.target.value)}
+              placeholder="e.g. 70"
+            />
+          </label>
+
+          <fieldset className="target-options">
+            <legend>Target cumulative dose</legend>
+            <label>
+              <input
+                type="radio"
+                name="target-dose"
+                value="120"
+                checked={targetMgPerKg === "120"}
+                onChange={(event) => setTargetMgPerKg(event.target.value)}
+              />
+              120 mg/kg
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="target-dose"
+                value="150"
+                checked={targetMgPerKg === "150"}
+                onChange={(event) => setTargetMgPerKg(event.target.value)}
+              />
+              150 mg/kg
+            </label>
+          </fieldset>
+        </div>
+      </section>
+
+      <section className="tool-panel" aria-labelledby="remaining-title">
+        <div className="section-heading compact-heading">
+          <p>Remaining treatment</p>
+          <h2 id="remaining-title">Time remaining calculator</h2>
+        </div>
+
+        <label className="field-label" htmlFor="remaining-dose">
+          Planned ongoing daily dose in mg
+          <input
+            id="remaining-dose"
+            inputMode="decimal"
+            min="0"
+            type="number"
+            value={remainingDoseMg}
+            onChange={(event) => setRemainingDoseMg(event.target.value)}
+            placeholder="e.g. 40"
+          />
+        </label>
+      </section>
+
+      <aside className="score-summary combined-report tool-summary" aria-live="polite">
+        <div className="report-heading">
+          <p className="score-label">Calculator report</p>
+          <h2>Totals for clinical review</h2>
+        </div>
+
+        <div className="metric-grid">
+          <MetricCard label="Completed cumulative dose" value={`${formatNumber(parsedHistory.totalMg)} mg`} />
+          <MetricCard
+            label="Completed dose by weight"
+            value={completedMgPerKg === undefined ? "--" : `${formatNumber(completedMgPerKg)} mg/kg`}
+          />
+          <MetricCard
+            label="Target cumulative dose"
+            value={targetTotalMg === undefined ? "--" : `${formatNumber(targetTotalMg)} mg`}
+          />
+          <MetricCard
+            label="Remaining to target"
+            value={remainingMg === undefined ? "--" : `${formatNumber(remainingMg)} mg`}
+          />
+          <MetricCard
+            label="Estimated time remaining"
+            value={remainingWeeks === undefined ? "--" : formatWeeksAndDays(remainingWeeks)}
+          />
+        </div>
+
+        <div className="actions">
+          <button type="button" className="reset-button" onClick={reset}>
+            Reset calculator
+          </button>
+        </div>
+
+        <p className="manual-note">
+          This tool performs dose arithmetic only. Confirm dosing decisions,
+          monitoring, contraindications, pregnancy prevention requirements, and
+          local protocols outside this calculator.
+        </p>
+      </aside>
+    </main>
+  );
+}
+
+function MetricCard({ label, value }: { label: string; value: string }) {
+  return (
+    <section className="metric-card">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </section>
   );
 }
 
@@ -358,6 +608,79 @@ function ScoreCard({ questionnaire, score }: ScoreCardProps) {
 
     </section>
   );
+}
+
+function parseDoseHistory(text: string): ParsedDoseHistory {
+  const pieces = text
+    .split(/[\n,;]+/)
+    .map((piece) => piece.trim())
+    .filter(Boolean);
+
+  const entries: DoseEntry[] = [];
+  const ignoredEntries: string[] = [];
+
+  pieces.forEach((piece) => {
+    const doseMatch = piece.match(/(\d+(?:\.\d+)?)\s*mg\b/i);
+    const weekMatch = piece.match(/(\d+(?:\.\d+)?)\s*(?:week|weeks|wk|wks)\b/i);
+
+    if (!doseMatch || !weekMatch) {
+      ignoredEntries.push(piece);
+      return;
+    }
+
+    const doseMg = Number(doseMatch[1]);
+    const weeks = Number(weekMatch[1]);
+
+    if (!Number.isFinite(doseMg) || !Number.isFinite(weeks) || doseMg <= 0 || weeks <= 0) {
+      ignoredEntries.push(piece);
+      return;
+    }
+
+    entries.push({
+      doseMg,
+      weeks,
+      text: piece,
+      totalMg: doseMg * weeks * 7
+    });
+  });
+
+  return {
+    entries,
+    ignoredEntries,
+    totalMg: entries.reduce((sum, entry) => sum + entry.totalMg, 0)
+  };
+}
+
+function parsePositiveNumber(value: string) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+function formatNumber(value: number) {
+  return new Intl.NumberFormat("en-GB", {
+    maximumFractionDigits: value < 10 ? 1 : 0
+  }).format(value);
+}
+
+function formatWeeksAndDays(weeks: number) {
+  const wholeWeeks = Math.floor(weeks);
+  const days = Math.ceil((weeks - wholeWeeks) * 7);
+
+  if (wholeWeeks === 0 && days === 0) {
+    return "0 weeks";
+  }
+
+  if (wholeWeeks === 0) {
+    return `${days} ${days === 1 ? "day" : "days"}`;
+  }
+
+  if (days === 0) {
+    return `${wholeWeeks} ${wholeWeeks === 1 ? "week" : "weeks"}`;
+  }
+
+  return `${wholeWeeks} ${wholeWeeks === 1 ? "week" : "weeks"} ${days} ${
+    days === 1 ? "day" : "days"
+  }`;
 }
 
 export default App;
