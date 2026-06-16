@@ -20,7 +20,6 @@ body {
 
 button,
 select,
-textarea,
 input {
   font: inherit;
 }
@@ -138,8 +137,7 @@ h1 {
   font-weight: 800;
 }
 
-.field-label input,
-.tool-panel textarea {
+.field-label input {
   width: 100%;
   border: 1px solid #b8c3be;
   border-radius: 8px;
@@ -152,14 +150,7 @@ h1 {
   min-height: 3.25rem;
 }
 
-.tool-panel textarea {
-  min-height: 10rem;
-  line-height: 1.45;
-  resize: vertical;
-}
-
 .field-label input:focus-visible,
-.tool-panel textarea:focus-visible,
 .target-options input:focus-visible {
   outline: 3px solid #86b7ff;
   outline-offset: 2px;
@@ -169,6 +160,77 @@ h1 {
   margin: 0;
   color: #53605d;
   line-height: 1.45;
+}
+
+.dose-entry-list {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.dose-entry {
+  display: grid;
+  gap: 0.85rem;
+  border: 1px solid #d7ded8;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 1rem;
+}
+
+.dose-entry-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.dose-entry-heading h3 {
+  margin: 0;
+  color: #16423c;
+  font-size: 1rem;
+}
+
+.dose-entry-fields {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.input-with-unit {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid #b8c3be;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.input-with-unit input {
+  min-height: 3.25rem;
+  border: 0;
+  border-radius: 0;
+}
+
+.input-with-unit span {
+  display: grid;
+  min-height: 3.25rem;
+  place-items: center;
+  border-left: 1px solid #d7ded8;
+  background: #eef2ef;
+  color: #3a4642;
+  padding: 0 0.8rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.row-total {
+  margin: 0;
+  color: #53605d;
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+
+.row-total strong {
+  color: #16423c;
 }
 
 .dose-table {
@@ -513,19 +575,42 @@ h1 {
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
 }
 
-.reset-button {
+.reset-button,
+.add-button,
+.secondary-button {
   width: 100%;
   min-height: 3rem;
   border: 0;
   border-radius: 8px;
-  background: #8f3d2e;
-  color: #ffffff;
+  padding: 0 1rem;
   font-weight: 800;
 }
 
-.reset-button:focus-visible {
+.reset-button {
+  background: #8f3d2e;
+  color: #ffffff;
+}
+
+.add-button {
+  background: #16423c;
+  color: #ffffff;
+}
+
+.secondary-button {
+  width: auto;
+  min-height: 2.5rem;
+  border: 1px solid #b8c3be;
+  background: #ffffff;
+  color: #16423c;
+}
+
+.reset-button:focus-visible,
+.add-button:focus-visible,
+.secondary-button:focus-visible {
   outline: 3px solid #86b7ff;
   outline-offset: 2px;
 }
@@ -591,12 +676,13 @@ h1 {
   }
 
   .input-grid,
+  .dose-entry-fields,
   .metric-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .reset-button {
+  .reset-button,
+  .add-button {
     width: auto;
-    padding: 0 1.1rem;
   }
 }

@@ -9,20 +9,18 @@ import { type AnswerMap, scoreQuestionnaire } from "./scoring";
 const optionId = (option: ResponseOption) =>
   option.id ?? `${option.label}-${option.value}`;
 
-type DoseEntry = {
-  doseMg: number;
-  weeks: number;
-  text: string;
-  totalMg: number;
+type DoseRow = {
+  id: string;
+  doseMg: string;
+  weeks: string;
 };
 
-type ParsedDoseHistory = {
-  entries: DoseEntry[];
-  ignoredEntries: string[];
-  totalMg: number;
-};
-
-const doseHistoryExample = "2 weeks at 20mg, 2 weeks at 40mg, 4 weeks at 40mg, 8 weeks at 60mg";
+const initialDoseRows: DoseRow[] = [
+  { id: "dose-row-1", doseMg: "20", weeks: "2" },
+  { id: "dose-row-2", doseMg: "40", weeks: "2" },
+  { id: "dose-row-3", doseMg: "40", weeks: "4" },
+  { id: "dose-row-4", doseMg: "60", weeks: "8" }
+];
 
 function App() {
   const [answers, setAnswers] = useState<AnswerMap>({});
@@ -192,27 +190,51 @@ function SelectionPage() {
 }
 
 function IsotretinoinCalculator() {
-  const [doseHistory, setDoseHistory] = useState(doseHistoryExample);
+  const [doseRows, setDoseRows] = useState<DoseRow[]>(initialDoseRows);
   const [weightKg, setWeightKg] = useState("");
   const [targetMgPerKg, setTargetMgPerKg] = useState("120");
   const [remainingDoseMg, setRemainingDoseMg] = useState("");
 
-  const parsedHistory = useMemo(() => parseDoseHistory(doseHistory), [doseHistory]);
+  const doseEntries = useMemo(() => calculateDoseEntries(doseRows), [doseRows]);
+  const completedTotalMg = doseEntries.reduce((sum, entry) => sum + entry.totalMg, 0);
   const weight = parsePositiveNumber(weightKg);
   const target = Number(targetMgPerKg);
   const targetTotalMg = weight ? weight * target : undefined;
   const remainingMg = targetTotalMg
-    ? Math.max(targetTotalMg - parsedHistory.totalMg, 0)
+    ? Math.max(targetTotalMg - completedTotalMg, 0)
     : undefined;
   const remainingDose = parsePositiveNumber(remainingDoseMg);
   const remainingWeeks =
     remainingMg !== undefined && remainingDose
       ? remainingMg / (remainingDose * 7)
       : undefined;
-  const completedMgPerKg = weight ? parsedHistory.totalMg / weight : undefined;
+  const completedMgPerKg = weight ? completedTotalMg / weight : undefined;
+
+  const updateDoseRow = (id: string, field: "doseMg" | "weeks", value: string) => {
+    setDoseRows((currentRows) =>
+      currentRows.map((row) =>
+        row.id === id ? { ...row, [field]: value } : row
+      )
+    );
+  };
+
+  const addDoseRow = () => {
+    setDoseRows((currentRows) => [
+      ...currentRows,
+      { id: `dose-row-${Date.now()}`, doseMg: "", weeks: "" }
+    ]);
+  };
+
+  const removeDoseRow = (id: string) => {
+    setDoseRows((currentRows) =>
+      currentRows.length === 1
+        ? [{ ...currentRows[0], doseMg: "", weeks: "" }]
+        : currentRows.filter((row) => row.id !== id)
+    );
+  };
 
   const reset = () => {
-    setDoseHistory("");
+    setDoseRows(initialDoseRows);
     setWeightKg("");
     setTargetMgPerKg("120");
     setRemainingDoseMg("");
@@ -229,8 +251,8 @@ function IsotretinoinCalculator() {
       <section className="control-panel" aria-label="Calculator note">
         <p className="combined-label">Clinic Tools</p>
         <span>
-          Enter daily dose periods as free text. The calculator multiplies dose
-          in mg by duration in weeks by 7 days.
+          Enter daily dose periods as structured rows. The calculator multiplies
+          daily dose in mg by duration in weeks by 7 days.
         </span>
       </section>
 
@@ -239,32 +261,94 @@ function IsotretinoinCalculator() {
           <p>Completed treatment</p>
           <h2 id="dose-history-title">Dose history</h2>
           <span>
-            Use entries such as: {doseHistoryExample}
+            Add one row for each dose period, such as 2 weeks at 20 mg or 8
+            weeks at 60 mg.
           </span>
         </div>
 
-        <label className="field-label" htmlFor="dose-history">
-          Dose and duration entries
-        </label>
-        <textarea
-          id="dose-history"
-          value={doseHistory}
-          onChange={(event) => setDoseHistory(event.target.value)}
-          rows={6}
-          placeholder={doseHistoryExample}
-        />
+        <div className="dose-entry-list">
+          {doseRows.map((row, index) => {
+            const entry = doseEntries.find((candidate) => candidate.id === row.id);
 
-        {parsedHistory.entries.length > 0 ? (
-          <div className="dose-table" aria-label="Parsed dose history">
+            return (
+              <section className="dose-entry" key={row.id} aria-label={`Dose period ${index + 1}`}>
+                <div className="dose-entry-heading">
+                  <h3>Dose period {index + 1}</h3>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => removeDoseRow(row.id)}
+                  >
+                    Remove
+                  </button>
+                </div>
+
+                <div className="dose-entry-fields">
+                  <label className="field-label" htmlFor={`${row.id}-dose`}>
+                    Dose
+                    <div className="input-with-unit">
+                      <input
+                        id={`${row.id}-dose`}
+                        inputMode="decimal"
+                        min="0"
+                        type="number"
+                        value={row.doseMg}
+                        onChange={(event) =>
+                          updateDoseRow(row.id, "doseMg", event.target.value)
+                        }
+                        placeholder="e.g. 40"
+                      />
+                      <span>mg/day</span>
+                    </div>
+                  </label>
+
+                  <label className="field-label" htmlFor={`${row.id}-weeks`}>
+                    Duration
+                    <div className="input-with-unit">
+                      <input
+                        id={`${row.id}-weeks`}
+                        inputMode="decimal"
+                        min="0"
+                        type="number"
+                        value={row.weeks}
+                        onChange={(event) =>
+                          updateDoseRow(row.id, "weeks", event.target.value)
+                        }
+                        placeholder="e.g. 8"
+                      />
+                      <span>weeks</span>
+                    </div>
+                  </label>
+                </div>
+
+                <p className="row-total">
+                  Row total:{" "}
+                  <strong>
+                    {entry ? `${formatNumber(entry.totalMg)} mg` : "--"}
+                  </strong>
+                </p>
+              </section>
+            );
+          })}
+        </div>
+
+        <div className="actions">
+          <button type="button" className="add-button" onClick={addDoseRow}>
+            Add dose period
+          </button>
+        </div>
+
+        {doseEntries.length > 0 ? (
+          <div className="dose-table" aria-label="Calculated dose history">
             <div className="dose-table-head">
-              <span>Entry</span>
+              <span>Period</span>
               <span>Dose</span>
               <span>Weeks</span>
               <span>Total</span>
             </div>
-            {parsedHistory.entries.map((entry, index) => (
-              <div className="dose-table-row" key={`${entry.text}-${index}`}>
-                <span>{entry.text}</span>
+            {doseEntries.map((entry, index) => (
+              <div className="dose-table-row" key={entry.id}>
+                <span>{index + 1}</span>
                 <span>{formatNumber(entry.doseMg)} mg/day</span>
                 <span>{formatNumber(entry.weeks)}</span>
                 <span>{formatNumber(entry.totalMg)} mg</span>
@@ -272,15 +356,8 @@ function IsotretinoinCalculator() {
             ))}
           </div>
         ) : (
-          <p className="helper-text">Add at least one dose-duration entry to show a total.</p>
+          <p className="helper-text">Add at least one complete dose period to show a total.</p>
         )}
-
-        {parsedHistory.ignoredEntries.length > 0 ? (
-          <div className="alert" role="alert">
-            <strong>Some entries were not recognised</strong>
-            <span>{parsedHistory.ignoredEntries.join("; ")}</span>
-          </div>
-        ) : null}
       </section>
 
       <section className="tool-panel" aria-labelledby="target-title">
@@ -356,7 +433,7 @@ function IsotretinoinCalculator() {
         </div>
 
         <div className="metric-grid">
-          <MetricCard label="Completed cumulative dose" value={`${formatNumber(parsedHistory.totalMg)} mg`} />
+          <MetricCard label="Completed cumulative dose" value={`${formatNumber(completedTotalMg)} mg`} />
           <MetricCard
             label="Completed dose by weight"
             value={completedMgPerKg === undefined ? "--" : `${formatNumber(completedMgPerKg)} mg/kg`}
@@ -610,50 +687,29 @@ function ScoreCard({ questionnaire, score }: ScoreCardProps) {
   );
 }
 
-function parseDoseHistory(text: string): ParsedDoseHistory {
-  const pieces = text
-    .split(/[\n,;]+/)
-    .map((piece) => piece.trim())
-    .filter(Boolean);
-
-  const entries: DoseEntry[] = [];
-  const ignoredEntries: string[] = [];
-
-  pieces.forEach((piece) => {
-    const doseMatch = piece.match(/(\d+(?:\.\d+)?)\s*mg\b/i);
-    const weekMatch = piece.match(/(\d+(?:\.\d+)?)\s*(?:week|weeks|wk|wks)\b/i);
-
-    if (!doseMatch || !weekMatch) {
-      ignoredEntries.push(piece);
-      return;
-    }
-
-    const doseMg = Number(doseMatch[1]);
-    const weeks = Number(weekMatch[1]);
-
-    if (!Number.isFinite(doseMg) || !Number.isFinite(weeks) || doseMg <= 0 || weeks <= 0) {
-      ignoredEntries.push(piece);
-      return;
-    }
-
-    entries.push({
-      doseMg,
-      weeks,
-      text: piece,
-      totalMg: doseMg * weeks * 7
-    });
-  });
-
-  return {
-    entries,
-    ignoredEntries,
-    totalMg: entries.reduce((sum, entry) => sum + entry.totalMg, 0)
-  };
-}
-
 function parsePositiveNumber(value: string) {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+function calculateDoseEntries(rows: DoseRow[]) {
+  return rows.flatMap((row) => {
+    const doseMg = parsePositiveNumber(row.doseMg);
+    const weeks = parsePositiveNumber(row.weeks);
+
+    if (!doseMg || !weeks) {
+      return [];
+    }
+
+    return [
+      {
+        id: row.id,
+        doseMg,
+        weeks,
+        totalMg: doseMg * weeks * 7
+      }
+    ];
+  });
 }
 
 function formatNumber(value: number) {
