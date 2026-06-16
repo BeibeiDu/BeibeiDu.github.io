@@ -266,70 +266,62 @@ function IsotretinoinCalculator() {
           </span>
         </div>
 
-        <div className="dose-entry-list">
-          {doseRows.map((row, index) => {
-            const entry = doseEntries.find((candidate) => candidate.id === row.id);
+        <div className="dose-grid" aria-label="Dose history entries">
+          <div className="dose-grid-head" aria-hidden="true">
+            <span />
+            <span>Dose (mg/day)</span>
+            <span>Duration</span>
+            <span />
+          </div>
+          {doseRows.map((row, index) => (
+            <div className="dose-grid-row" key={row.id}>
+              <div className="dose-row-label">Dose {index + 1}</div>
 
-            return (
-              <section className="dose-entry" key={row.id} aria-label={`Dose period ${index + 1}`}>
-                <div className="dose-entry-heading">
-                  <h3>Dose period {index + 1}</h3>
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={() => removeDoseRow(row.id)}
-                  >
-                    Remove
-                  </button>
-                </div>
+              <label className="visually-hidden" htmlFor={`${row.id}-dose`}>
+                Dose {index + 1} dose in mg per day
+              </label>
+              <div className="input-with-unit">
+                <input
+                  id={`${row.id}-dose`}
+                  inputMode="decimal"
+                  min="0"
+                  type="number"
+                  value={row.doseMg}
+                  onChange={(event) =>
+                    updateDoseRow(row.id, "doseMg", event.target.value)
+                  }
+                  placeholder="40"
+                />
+                <span>mg/day</span>
+              </div>
 
-                <div className="dose-entry-fields">
-                  <label className="field-label" htmlFor={`${row.id}-dose`}>
-                    Dose
-                    <div className="input-with-unit">
-                      <input
-                        id={`${row.id}-dose`}
-                        inputMode="decimal"
-                        min="0"
-                        type="number"
-                        value={row.doseMg}
-                        onChange={(event) =>
-                          updateDoseRow(row.id, "doseMg", event.target.value)
-                        }
-                        placeholder="e.g. 40"
-                      />
-                      <span>mg/day</span>
-                    </div>
-                  </label>
+              <label className="visually-hidden" htmlFor={`${row.id}-weeks`}>
+                Dose {index + 1} duration in weeks
+              </label>
+              <div className="input-with-unit">
+                <input
+                  id={`${row.id}-weeks`}
+                  inputMode="decimal"
+                  min="0"
+                  type="number"
+                  value={row.weeks}
+                  onChange={(event) =>
+                    updateDoseRow(row.id, "weeks", event.target.value)
+                  }
+                  placeholder="8"
+                />
+                <span>weeks</span>
+              </div>
 
-                  <label className="field-label" htmlFor={`${row.id}-weeks`}>
-                    Duration
-                    <div className="input-with-unit">
-                      <input
-                        id={`${row.id}-weeks`}
-                        inputMode="decimal"
-                        min="0"
-                        type="number"
-                        value={row.weeks}
-                        onChange={(event) =>
-                          updateDoseRow(row.id, "weeks", event.target.value)
-                        }
-                        placeholder="e.g. 8"
-                      />
-                      <span>weeks</span>
-                    </div>
-                  </label>
-                </div>
-
-                <p className="row-total">
-                  Row total:{" "}
-                  <strong>
-                    {entry ? `${formatNumber(entry.totalMg)} mg` : "--"}
-                  </strong>
-                </p>
-              </section>
-            );
-          })}
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => removeDoseRow(row.id)}
+              >
+                Remove
+              </button>
+            </div>
+          ))}
         </div>
 
         <div className="actions">
@@ -338,26 +330,9 @@ function IsotretinoinCalculator() {
           </button>
         </div>
 
-        {doseEntries.length > 0 ? (
-          <div className="dose-table" aria-label="Calculated dose history">
-            <div className="dose-table-head">
-              <span>Period</span>
-              <span>Dose</span>
-              <span>Weeks</span>
-              <span>Total</span>
-            </div>
-            {doseEntries.map((entry, index) => (
-              <div className="dose-table-row" key={entry.id}>
-                <span>{index + 1}</span>
-                <span>{formatNumber(entry.doseMg)} mg/day</span>
-                <span>{formatNumber(entry.weeks)}</span>
-                <span>{formatNumber(entry.totalMg)} mg</span>
-              </div>
-            ))}
-          </div>
-        ) : (
+        {doseEntries.length === 0 ? (
           <p className="helper-text">Add at least one complete dose period to show a total.</p>
-        )}
+        ) : null}
       </section>
 
       <section className="tool-panel" aria-labelledby="target-title">
