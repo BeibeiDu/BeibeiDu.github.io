@@ -16,10 +16,9 @@ type DoseRow = {
 };
 
 const initialDoseRows: DoseRow[] = [
-  { id: "dose-row-1", doseMg: "20", weeks: "2" },
-  { id: "dose-row-2", doseMg: "40", weeks: "2" },
-  { id: "dose-row-3", doseMg: "40", weeks: "4" },
-  { id: "dose-row-4", doseMg: "60", weeks: "8" }
+  { id: "dose-row-1", doseMg: "", weeks: "" },
+  { id: "dose-row-2", doseMg: "", weeks: "" },
+  { id: "dose-row-3", doseMg: "", weeks: "" }
 ];
 
 function App() {
@@ -290,7 +289,6 @@ function IsotretinoinCalculator() {
                   onChange={(event) =>
                     updateDoseRow(row.id, "doseMg", event.target.value)
                   }
-                  placeholder="40"
                 />
                 <span>mg/day</span>
               </div>
@@ -308,7 +306,6 @@ function IsotretinoinCalculator() {
                   onChange={(event) =>
                     updateDoseRow(row.id, "weeks", event.target.value)
                   }
-                  placeholder="8"
                 />
                 <span>weeks</span>
               </div>
