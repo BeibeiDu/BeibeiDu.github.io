@@ -420,7 +420,7 @@ function IsotretinoinCalculator() {
           />
           <MetricCard
             label="Estimated time remaining"
-            value={remainingWeeks === undefined ? "--" : formatWeeksAndDays(remainingWeeks)}
+            value={remainingWeeks === undefined ? "--" : formatRemainingTime(remainingWeeks)}
           />
         </div>
 
@@ -690,25 +690,31 @@ function formatNumber(value: number) {
   }).format(value);
 }
 
-function formatWeeksAndDays(weeks: number) {
-  const wholeWeeks = Math.floor(weeks);
-  const days = Math.ceil((weeks - wholeWeeks) * 7);
+function formatRemainingTime(weeks: number) {
+  const totalDays = Math.ceil(weeks * 7);
+  const wholeWeeks = Math.floor(totalDays / 7);
+  const remainingDays = totalDays % 7;
+  const months = Math.floor(totalDays / 30);
+  const daysAfterMonths = totalDays % 30;
+  const approximateWeeks = Math.round(daysAfterMonths / 7);
+  const exactParts = [
+    wholeWeeks > 0 ? pluralise(wholeWeeks, "week") : "",
+    remainingDays > 0 ? pluralise(remainingDays, "day") : ""
+  ].filter(Boolean);
+  const approximateParts = [
+    months > 0 ? pluralise(months, "month") : "",
+    approximateWeeks > 0 ? pluralise(approximateWeeks, "week") : ""
+  ].filter(Boolean);
 
-  if (wholeWeeks === 0 && days === 0) {
-    return "0 weeks";
+  if (totalDays === 0) {
+    return "0 weeks, 0 days (approx. 0 months)";
   }
 
-  if (wholeWeeks === 0) {
-    return `${days} ${days === 1 ? "day" : "days"}`;
-  }
+  return `${exactParts.join(" ")} (approx. ${approximateParts.join(" ") || "0 months"})`;
+}
 
-  if (days === 0) {
-    return `${wholeWeeks} ${wholeWeeks === 1 ? "week" : "weeks"}`;
-  }
-
-  return `${wholeWeeks} ${wholeWeeks === 1 ? "week" : "weeks"} ${days} ${
-    days === 1 ? "day" : "days"
-  }`;
+function pluralise(value: number, unit: string) {
+  return `${value} ${unit}${value === 1 ? "" : "s"}`;
 }
 
 export default App;
