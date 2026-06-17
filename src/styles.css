@@ -151,6 +151,7 @@ h1 {
 }
 
 .field-label input:focus-visible,
+.input-with-unit input:focus-visible,
 .target-options input:focus-visible {
   outline: 3px solid #86b7ff;
   outline-offset: 2px;
@@ -198,26 +199,17 @@ h1 {
   background: #ffffff;
 }
 
-.dose-grid-head,
+.dose-grid-head {
+  display: none;
+}
+
 .dose-grid-row {
   display: grid;
-  grid-template-columns: 5rem minmax(0, 1fr) minmax(0, 1fr) auto;
-  gap: 0.7rem;
-  align-items: center;
-  padding: 0.75rem;
-}
-
-.dose-grid-head {
-  background: #eaf6f0;
-  color: #16423c;
-  font-size: 0.84rem;
-  font-weight: 800;
-}
-
-.dose-grid-row {
+  gap: 0.8rem;
   border-top: 1px solid #edf0ed;
   color: #3a4642;
   font-size: 0.9rem;
+  padding: 0.9rem;
 }
 
 .dose-grid-row > *,
@@ -228,6 +220,17 @@ h1 {
 
 .dose-row-label {
   color: #16423c;
+  font-weight: 800;
+}
+
+.dose-grid-cell {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.mobile-column-label {
+  color: #53605d;
+  font-size: 0.82rem;
   font-weight: 800;
 }
 
@@ -650,6 +653,30 @@ h1 {
   .input-grid,
   .metric-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dose-grid-head,
+  .dose-grid-row {
+    display: grid;
+    grid-template-columns: 5rem minmax(0, 1fr) minmax(0, 1fr) auto;
+    gap: 0.7rem;
+    align-items: center;
+    padding: 0.75rem;
+  }
+
+  .dose-grid-head {
+    background: #eaf6f0;
+    color: #16423c;
+    font-size: 0.84rem;
+    font-weight: 800;
+  }
+
+  .dose-grid-cell {
+    display: block;
+  }
+
+  .mobile-column-label {
+    display: none;
   }
 
   .reset-button,

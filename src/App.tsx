@@ -279,35 +279,41 @@ function IsotretinoinCalculator() {
               <label className="visually-hidden" htmlFor={`${row.id}-dose`}>
                 Dose {index + 1} dose in mg per day
               </label>
-              <div className="input-with-unit">
-                <input
-                  id={`${row.id}-dose`}
-                  inputMode="decimal"
-                  min="0"
-                  type="number"
-                  value={row.doseMg}
-                  onChange={(event) =>
-                    updateDoseRow(row.id, "doseMg", event.target.value)
-                  }
-                />
-                <span>mg/day</span>
+              <div className="dose-grid-cell">
+                <span className="mobile-column-label">Dose (mg/day)</span>
+                <div className="input-with-unit">
+                  <input
+                    id={`${row.id}-dose`}
+                    inputMode="decimal"
+                    pattern="[0-9]*[.]?[0-9]*"
+                    type="text"
+                    value={row.doseMg}
+                    onChange={(event) =>
+                      updateDoseRow(row.id, "doseMg", event.target.value)
+                    }
+                  />
+                  <span>mg/day</span>
+                </div>
               </div>
 
               <label className="visually-hidden" htmlFor={`${row.id}-weeks`}>
                 Dose {index + 1} duration in weeks
               </label>
-              <div className="input-with-unit">
-                <input
-                  id={`${row.id}-weeks`}
-                  inputMode="decimal"
-                  min="0"
-                  type="number"
-                  value={row.weeks}
-                  onChange={(event) =>
-                    updateDoseRow(row.id, "weeks", event.target.value)
-                  }
-                />
-                <span>weeks</span>
+              <div className="dose-grid-cell">
+                <span className="mobile-column-label">Duration</span>
+                <div className="input-with-unit">
+                  <input
+                    id={`${row.id}-weeks`}
+                    inputMode="decimal"
+                    pattern="[0-9]*[.]?[0-9]*"
+                    type="text"
+                    value={row.weeks}
+                    onChange={(event) =>
+                      updateDoseRow(row.id, "weeks", event.target.value)
+                    }
+                  />
+                  <span>weeks</span>
+                </div>
               </div>
 
               <button
