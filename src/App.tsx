@@ -36,7 +36,7 @@ function App() {
 
   useEffect(() => {
     if (isRootPage) {
-      document.title = "Questionnaire Selection";
+      document.title = "Dermatology tools";
       return;
     }
 
@@ -147,8 +147,8 @@ function SelectionPage() {
   return (
     <main className="app-shell">
       <PageIntro
-        title="Questionnaire Selection"
-        description="Choose the questionnaire set to complete. Scores are calculated only in this browser session and are not stored or transmitted."
+        title="Dermatology tools"
+        kicker=""
       />
 
       <section className="selector-panel" aria-labelledby="questionnaire-select-label">
@@ -457,16 +457,17 @@ function MetricCard({ label, value }: { label: string; value: string }) {
 
 type PageIntroProps = {
   title: string;
-  description: string;
+  description?: string;
+  kicker?: string;
 };
 
-function PageIntro({ title, description }: PageIntroProps) {
+function PageIntro({ title, description, kicker = "Local-only clinic scoring" }: PageIntroProps) {
   return (
     <section className="intro-band">
       <div className="intro-content">
-        <p className="kicker">Local-only clinic scoring</p>
+        {kicker ? <p className="kicker">{kicker}</p> : null}
         <h1>{title}</h1>
-        <p className="privacy-note">{description}</p>
+        {description ? <p className="privacy-note">{description}</p> : null}
       </div>
     </section>
   );
@@ -486,7 +487,7 @@ function QuestionnaireForm({
   return (
     <section className="questionnaire" aria-labelledby="questionnaire-title">
       <div className="section-heading">
-        <p>{questionnaire.timeframe}</p>
+        {questionnaire.timeframe ? <p>{questionnaire.timeframe}</p> : null}
         <h2 id="questionnaire-title">{questionnaire.title}</h2>
         <span>{questionnaire.instructions}</span>
       </div>
@@ -576,8 +577,8 @@ function CombinedScoreReport({ scores, onReset }: CombinedScoreReportProps) {
       </div>
 
       <p className="manual-note">
-        Manually transcribe both displayed scores into the approved capture
-        system, then reset before returning the phone.
+        Please show this page, or a screenshot of the page, to the clinician
+        during your consultation
       </p>
     </aside>
   );
@@ -602,8 +603,8 @@ function SingleScoreReport({ questionnaire, score, onReset }: SingleScoreReportP
       </div>
 
       <p className="manual-note">
-        Manually transcribe the displayed score into the approved capture
-        system, then reset before returning the phone.
+        Please show this page, or a screenshot of the page, to the clinician
+        during your consultation
       </p>
     </aside>
   );

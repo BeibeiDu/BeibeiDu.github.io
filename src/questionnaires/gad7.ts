@@ -4,15 +4,17 @@ export const gad7: QuestionnaireConfig = {
   id: "gad-7",
   title: "Generalized Anxiety Disorder-7",
   shortTitle: "GAD-7",
-  timeframe: "Over the last 2 weeks",
+  timeframe: "",
   instructions:
-    "Select how often the participant has been bothered by each problem.",
+    "Over the last 2 weeks, how often have you been bothered by the following problems?",
   options: [
     { id: "not-at-all", label: "Not at all", value: 0 },
     { id: "several-days", label: "Several days", value: 1 },
     { id: "more-than-half", label: "More than half the days", value: 2 },
     { id: "nearly-every-day", label: "Nearly every day", value: 3 }
   ],
+  copyrightNotice:
+    "Developed by Drs Robert L. Spitzer, Janet B.W. Williams, Kurt Kroenke and colleagues with an educational grant from Pfizer Inc. No permission required to reproduce, translate, display or distribute.",
   totalScoreLabel: "GAD-7 total",
   scoreBands: [
     { min: 0, max: 4, label: "Minimal" },
